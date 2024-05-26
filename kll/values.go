@@ -293,20 +293,103 @@ func (iv Int8Value) Convert(other Type) (Value, Error) {
 
 // #endregion
 
+// #region String
+
+type StringType struct {
+	TypeBase
+	Limit uint32
+}
+
+func (st StringType) String() string {
+	if st.Limit == 0 {
+		return "string"
+	} else {
+		return fmt.Sprintf("string[%v]", st.Limit)
+	}
+}
+func (st StringType) Type() Type {
+	return st
+}
+func (st StringType) Instantiate(arg any) Value {
+	ret := StringValue{tp: st, value: fmt.Sprint(arg), ValueBase: ValueBase{Value: nil}}
+	ret.Value = &ret
+	return ret
+}
+func (st StringType) ConvertibleWith(other Type) bool {
+	switch other := other.(type) {
+	case StringType:
+		return other.Limit >= st.Limit
+	case *StringType:
+		return other.Limit >= st.Limit
+	}
+	return false
+}
+func NewStringType(limit uint32) Type {
+	ret := StringType{Limit: limit, TypeBase: TypeBase{ValueBase: ValueBase{Value: nil}}}
+	ret.Value = &ret
+	return ret
+}
+
+type StringValue struct {
+	ValueBase
+	tp    StringType
+	value string
+}
+
+func (s StringValue) Type() Type {
+	return s.tp
+}
+func (s StringValue) String() string {
+	return s.value
+}
+func (s StringValue) Is(other Value) bool {
+	switch other := other.(type) {
+	case StringValue:
+		return s.value == other.value
+	case *StringValue:
+		return s.value == other.value
+	}
+	return false
+}
+
+func (s StringValue) Sum(other Value) (Value, Error) {
+	switch other := other.(type) {
+	case StringValue:
+		ret := s.value + other.value
+		if s.tp.Limit != 0 && s.tp.Limit < uint32(len(ret)) {
+			break
+		}
+		return nil, StringOutOfLimits.Instantiate(ErrorArgs{[]Callstack{}, []any{s.tp.String(), s.tp.Limit}}).(Error)
+	}
+	return nil, ImpossibleOperation.Instantiate(ErrorArgs{[]Callstack{}, []any{"Sum", s.tp.String(), other.Type().String()}}).(Error)
+}
+
+// #endregion
+
 // #region Values
 
 var (
 	NullType Type = TypeBase{ValueBase{}}
 	Int8     Type = int8Type{}
+	String   Type = NewStringType(0)
 
 	SuccessType Type = NewErrorType("Success", func(a ...any) string {
 		return "Success To Realise This Operation"
 	})
-	CantConvert Type = NewErrorType("CanTConvert", func(a ...any) string {
+	Unclosed Type = NewErrorType("Unclosed", func(a ...any) string {
+		return fmt.Sprintf("%v was not closed", a[0])
+	})
+	InvalidNewLine Type = NewErrorType("Invalid New Line", func(a ...any) string {
+		return "You Can T Use NewLine On This Moment"
+	})
+	CantConvert Type = NewErrorType("Can'T Convert", func(a ...any) string {
 		return fmt.Sprintf("Can t Convert %s to %s", a[0].(string), a[1].(string))
 	})
-	ImpossibleOperation Type = NewErrorType("ImpossibleOperation", func(a ...any) string {
+	ImpossibleOperation Type = NewErrorType("Impossible Operation", func(a ...any) string {
 		return fmt.Sprintf("Can t %s %s with %s", a[0].(string), a[1].(string), a[2].(string))
+	})
+	StringOutOfLimits Type = NewErrorType("String Out Of Limits", func(a ...any) string {
+		return fmt.Sprintf("The String %s can t ultrapass %v", a[0].(string), a[1].(uint32))
 	})
 )
 var (
