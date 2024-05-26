@@ -16,6 +16,8 @@ const (
 	TT_STRING    = "STRING"
 	TT_NAME      = "NAME"
 	TT_POINT     = "POINT"
+	TT_LPAREN    = "LPAREN"
+	TT_RPAREN    = "RPAREN"
 )
 
 const NUMBERS = "0123456789"
@@ -57,15 +59,17 @@ func (l *Lexer) NextToken() {
 }
 
 func (l *Lexer) GetString(closer rune) Error {
+	col := l.Col
+	line := l.Line
 	l.NextToken()
 	value := ""
 	running := true
 	for running {
 		switch l.Ch {
 		case 0:
-			return Unclosed.Instantiate(ErrorArgs{Args: []any{'"'}, Callstack: []Callstack{}}).(Error)
+			return Unclosed.Instantiate(ErrorArgs{Args: []any{string(closer)}, Callstack: []Callstack{{Line: line, Col: col, Show: l.Lines[line-1]}}}).(Error)
 		case '\n':
-			return InvalidNewLine.Instantiate(ErrorArgs{Args: []any{}, Callstack: []Callstack{}}).(Error)
+			return InvalidNewLine.Instantiate(ErrorArgs{Args: []any{}, Callstack: []Callstack{{Line: line, Col: col, Show: l.Lines[line-1]}}}).(Error)
 		case closer:
 			running = false
 		default:
@@ -83,6 +87,7 @@ func (l *Lexer) Main() Error {
 	l.Line = 1
 	l.Lines = strings.Split(l.Input, "\n")
 	for l.Ch != 0 {
+		ok := false
 		switch l.Ch {
 		case '\n':
 			l.Tokens = append(l.Tokens, NewToken(TT_NEWLINE, nil))
@@ -96,6 +101,10 @@ func (l *Lexer) Main() Error {
 			l.Tokens = append(l.Tokens, NewToken(TT_MUL, nil))
 		case '/':
 			l.Tokens = append(l.Tokens, NewToken(TT_DIV, nil))
+		case '(':
+			l.Tokens = append(l.Tokens, NewToken(TT_LPAREN, nil))
+		case ')':
+			l.Tokens = append(l.Tokens, NewToken(TT_RPAREN, nil))
 		case '"':
 			err := l.GetString('"')
 			if !err.Is(Success) {
@@ -106,6 +115,10 @@ func (l *Lexer) Main() Error {
 			if !err.Is(Success) {
 				return err
 			}
+		case ' ', '\t', rune(13):
+			ok = false
+		default:
+			ok = true
 		}
 		if strings.ContainsRune(VARS_NAME, l.Ch) {
 			content := ""
@@ -115,8 +128,7 @@ func (l *Lexer) Main() Error {
 			}
 			l.Tokens = append(l.Tokens, NewToken(TT_NAME, String.Instantiate(content)))
 			continue
-		}
-		if strings.ContainsRune(NUMBERS+".", l.Ch) {
+		} else if strings.ContainsRune(NUMBERS+".", l.Ch) {
 			float := false
 			content := ""
 			for l.Ch != 0 && strings.ContainsRune(NUMBERS+".", l.Ch) {
@@ -139,6 +151,8 @@ func (l *Lexer) Main() Error {
 				l.Tokens = append(l.Tokens, NewToken(TT_INT, String.Instantiate(content)))
 			}
 			continue
+		} else if ok {
+			return InvalidChar.Instantiate(ErrorArgs{Args: []any{l.Ch}, Callstack: []Callstack{}}).(Error)
 		}
 		l.NextToken()
 	}
@@ -148,7 +162,7 @@ func (l *Lexer) Main() Error {
 func Tokenizer(txt string) ([]Token, Error) {
 	l := Lexer{Input: txt}
 	err := l.Main()
-	if !err.Is(Success) {
+	if !err.Is(Success) && len(err.Callstack) == 0 {
 		err.Callstack = append(err.Callstack, Callstack{Line: l.Line, Col: l.Col, Show: l.Lines[l.Line-1]})
 	}
 	return l.Tokens, err

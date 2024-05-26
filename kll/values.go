@@ -124,7 +124,7 @@ func (et ErrorType) Is(other Value) bool {
 	return false
 }
 func (et ErrorType) String() string {
-	return "Error" + et.Tp
+	return "Error:" + et.Tp
 }
 func (et ErrorType) Type() Type {
 	return et
@@ -153,12 +153,13 @@ func (e Error) Is(other Value) bool {
 	return false
 }
 func (e Error) String() string {
-	ret := e.tp.String() + ":" + e.Message + "\n"
+	ret := e.tp.String()
 	for i, c := range e.Callstack {
-		if i != 0 {
-			ret += "\n"
+		//+strings.Repeat(" ", len(c.Show)-int(c.Col))
+		ret += "\n" + fmt.Sprintf("Line: %v, Col: %v\n%v\n%v\n", c.Line, c.Col, c.Show, strings.Repeat(" ", int(c.Col-1))+"^")
+		if i == len(e.Callstack)-1 {
+			ret += e.Message
 		}
-		ret += "\n" + fmt.Sprintf("Line: %v, Col: %v\n%v\n%v", c.Line, c.Col, c.Show, strings.Repeat("_", int(c.Col-1))+"^"+strings.Repeat("_", len(c.Show)-int(c.Col)))
 	}
 	return ret
 }
@@ -377,13 +378,16 @@ var (
 		return "Success To Realise This Operation"
 	})
 	Unclosed Type = NewErrorType("Unclosed", func(a ...any) string {
-		return fmt.Sprintf("%v was not closed", a[0])
+		return fmt.Sprintf("\"%v\" was not closed", a[0])
 	})
 	InvalidNewLine Type = NewErrorType("Invalid New Line", func(a ...any) string {
 		return "You Can T Use NewLine On This Moment"
 	})
 	CantConvert Type = NewErrorType("Can'T Convert", func(a ...any) string {
 		return fmt.Sprintf("Can t Convert %s to %s", a[0].(string), a[1].(string))
+	})
+	InvalidChar Type = NewErrorType("Invalid Char", func(a ...any) string {
+		return fmt.Sprintf("The Char \"%v\" is Invalid", a[0])
 	})
 	ImpossibleOperation Type = NewErrorType("Impossible Operation", func(a ...any) string {
 		return fmt.Sprintf("Can t %s %s with %s", a[0].(string), a[1].(string), a[2].(string))

@@ -53,3 +53,11 @@ func TestLexerPoint(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestLexerError(t *testing.T) {
+	_, err := kll.Tokenizer("'aaaaaaaa")
+	fmt.Println(err)
+	if fmt.Sprint(err) != "Error:Unclosed\nLine: 1, Col: 1\n'aaaaaaaa\n^\n\"'\" was not closed" {
+		t.Fail()
+	}
+}

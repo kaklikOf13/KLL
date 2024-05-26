@@ -3,5 +3,5 @@
 
 Test Arithmetic
 ```
-go run main.go examples/arithmetic.kll
+go run main.go tokenizer examples/arithmetic.kll
 ```

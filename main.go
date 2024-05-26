@@ -54,13 +54,15 @@ func main() {
 				if !kllerr.Is(kll.Success) {
 					fmt.Println(kllerr)
 				}
-				show := ""
+				line := 1
+				show := fmt.Sprintf("Line %v:", line)
 				for _, tok := range toks {
 					switch tok.Type {
 					case kll.TT_NEWLINE:
-						show += "\n"
+						line++
+						show += "\n" + fmt.Sprintf("Line %v:", line)
 					default:
-						show += tok.String()
+						show += " " + tok.String()
 					}
 				}
 				fmt.Println(show)

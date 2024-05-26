@@ -63,7 +63,7 @@ func TestValueErrorSum(t *testing.T) {
 func TestValueErrorCreate(t *testing.T) {
 	err := kll.ImpossibleOperation.Instantiate(kll.ErrorArgs{Callstack: []kll.Callstack{{Line: 5, Col: 5, Show: "123456"}}, Args: []any{"Sum", "int8", "null"}})
 	fmt.Println(err)
-	const sn = "ErrorImpossibleOperation:Can t Sum int8 with null\n\nLine: 5, Col: 5\n123456\n____^_"
+	const sn = "Error:Impossible Operation\nLine: 5, Col: 5\n123456\n    ^\nCan t Sum int8 with null"
 	if err.String() != sn {
 		t.Fail()
 	}
