@@ -88,11 +88,6 @@ func (t TypeBase) ConvertibleWith(tp Type) bool {
 
 // #region Error
 
-type Callstack struct {
-	Line uint32
-	Col  uint32
-	Show string
-}
 type ErrorArgs struct {
 	Callstack []Callstack
 	Args      []any
@@ -394,6 +389,9 @@ var (
 	})
 	StringOutOfLimits Type = NewErrorType("String Out Of Limits", func(a ...any) string {
 		return fmt.Sprintf("The String %s can t ultrapass %v", a[0].(string), a[1].(uint32))
+	})
+	InvalidPosition Type = NewErrorType("Invalid Position", func(a ...any) string {
+		return "You Can T This Char On This Position"
 	})
 )
 var (
