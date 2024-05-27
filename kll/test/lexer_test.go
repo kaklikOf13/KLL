@@ -14,7 +14,7 @@ func TestLexerSum(t *testing.T) {
 	}
 	fmt.Println(toks[0].Value.Type())
 	fmt.Println(toks)
-	if fmt.Sprint(toks) != "[{FLOAT:1} {SUM} {FLOAT:10}]" {
+	if fmt.Sprint(toks) != "[{INT:1} {SUM} {INT:10}]" {
 		t.Fail()
 	}
 }
