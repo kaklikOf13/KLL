@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	kll "github.com/kaklikOf13/KLL/kll"
+	"github.com/kaklikOf13/KLL/kll"
 )
 
-func TestSum(t *testing.T) {
+func TestValueSum(t *testing.T) {
 	val1 := kll.Int8.Instantiate("4")
 	val2 := kll.Int8.Instantiate(7)
 	fmt.Println(val1, val2)
@@ -17,7 +17,7 @@ func TestSum(t *testing.T) {
 		t.Fail()
 	}
 }
-func TestSub(t *testing.T) {
+func TestValueSub(t *testing.T) {
 	val1 := kll.Int8.Instantiate("4")
 	val2 := kll.Int8.Instantiate(7)
 	fmt.Println(val1, val2)
@@ -28,7 +28,7 @@ func TestSub(t *testing.T) {
 	}
 }
 
-func TestMult(t *testing.T) {
+func TestValueMult(t *testing.T) {
 	val1 := kll.Int8.Instantiate("5")
 	val2 := kll.Int8.Instantiate(8)
 	fmt.Println(val1, val2)
@@ -39,7 +39,7 @@ func TestMult(t *testing.T) {
 	}
 }
 
-func TestDiv(t *testing.T) {
+func TestValueDiv(t *testing.T) {
 	val1 := kll.Int8.Instantiate("50")
 	val2 := kll.Int8.Instantiate(2)
 	fmt.Println(val1, val2)
@@ -50,7 +50,7 @@ func TestDiv(t *testing.T) {
 	}
 }
 
-func TestErrorSum(t *testing.T) {
+func TestValueErrorSum(t *testing.T) {
 	val1 := kll.Int8.Instantiate("4")
 	fmt.Println(val1, kll.Null)
 	result, err := val1.Sum(kll.Null)
@@ -60,10 +60,10 @@ func TestErrorSum(t *testing.T) {
 	}
 }
 
-func TestErrorCreate(t *testing.T) {
+func TestValueErrorCreate(t *testing.T) {
 	err := kll.ImpossibleOperation.Instantiate(kll.ErrorArgs{Callstack: []kll.Callstack{{Line: 5, Col: 5, Show: "123456"}}, Args: []any{"Sum", "int8", "null"}})
 	fmt.Println(err)
-	const sn = "ErrorImpossibleOperation:Can t Sum int8 with null\n\nLine: 5, Col: 5\n123456\n____^_"
+	const sn = "Error:Impossible Operation\nLine: 5, Col: 5\n123456\n    ^\nCan t Sum int8 with null"
 	if err.String() != sn {
 		t.Fail()
 	}

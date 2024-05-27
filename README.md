@@ -1,6 +1,7 @@
 # KLL
 ## Programing Language
-To Build use
+
+Test Arithmetic
 ```
-go build main.go -o dist/kll
+go run main.go tokenizer examples/arithmetic.kll
 ```
