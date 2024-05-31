@@ -44,6 +44,17 @@ func main() {
 			} else {
 				PrintHelp("")
 			}
+		case "interpret":
+			if len(os.Args) > 2 {
+				inter := kll.NewInterpreter(kll.NewScope())
+				f, err := os.ReadFile(os.Args[2])
+				if err != nil {
+					fmt.Println(err)
+				}
+				inter.Eval(string(f))
+			} else {
+				PrintHelp("")
+			}
 		case "tokenizer":
 			if len(os.Args) > 2 {
 				f, err := os.ReadFile(os.Args[2])

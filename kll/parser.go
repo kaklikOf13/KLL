@@ -84,11 +84,11 @@ func (p *Parser) Value() (Node, Error) {
 		}
 		node = NewNode(NT_SUBOP, []Value{node}, tok.Callstack)
 		if p.CurTok.Type != TT_RPAREN {
-			return node, Unclosed.Instantiate(ErrorArgs{Callstack: []Callstack{tok.Callstack}}).(Error)
+			return node, Unclosed.Create(ErrorArgs{Callstack: []Callstack{tok.Callstack}}).(Error)
 		}
 		return node, Success
 	default:
-		return NewNode(NT_NULL, nil, tok.Callstack), InvalidPosition.Instantiate(ErrorArgs{Callstack: []Callstack{tok.Callstack}, Args: []any{}}).(Error)
+		return NewNode(NT_NULL, nil, tok.Callstack), InvalidPosition.Create(ErrorArgs{Callstack: []Callstack{tok.Callstack}, Args: []any{}}).(Error)
 	}
 }
 
