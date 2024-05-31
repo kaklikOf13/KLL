@@ -25,6 +25,10 @@ type ValueBase struct {
 	Value Value
 }
 
+func (v *ValueBase) Init(self Value) {
+	v.Value = self
+}
+
 func (v ValueBase) String() string {
 	return "null"
 }
@@ -39,22 +43,22 @@ func (v ValueBase) Is(other Value) bool {
 	return false
 }
 func (v ValueBase) Sum(other Value) (Value, Error) {
-	return nil, ImpossibleOperation.Instantiate(ErrorArgs{[]Callstack{}, []any{"Sum", v.Value.Type().String(), other.Type().String()}}).(Error)
+	return nil, ImpossibleOperation.Create(ErrorArgs{[]Callstack{}, []any{"Sum", v.Value.Type().String(), other.Type().String()}}).(Error)
 }
 func (v ValueBase) Sub(other Value) (Value, Error) {
-	return nil, ImpossibleOperation.Instantiate(ErrorArgs{[]Callstack{}, []any{"Subtract", v.Value.Type().String(), other.Type().String()}}).(Error)
+	return nil, ImpossibleOperation.Create(ErrorArgs{[]Callstack{}, []any{"Subtract", v.Value.Type().String(), other.Type().String()}}).(Error)
 }
 func (v ValueBase) Mult(other Value) (Value, Error) {
-	return nil, ImpossibleOperation.Instantiate(ErrorArgs{[]Callstack{}, []any{"Multiply", v.Value.Type().String(), other.Type().String()}}).(Error)
+	return nil, ImpossibleOperation.Create(ErrorArgs{[]Callstack{}, []any{"Multiply", v.Value.Type().String(), other.Type().String()}}).(Error)
 }
 func (v ValueBase) Div(other Value) (Value, Error) {
-	return nil, ImpossibleOperation.Instantiate(ErrorArgs{[]Callstack{}, []any{"Divade", v.Value.Type().String(), other.Type().String()}}).(Error)
+	return nil, ImpossibleOperation.Create(ErrorArgs{[]Callstack{}, []any{"Divade", v.Value.Type().String(), other.Type().String()}}).(Error)
 }
 func (v ValueBase) Convert(other Type) (Value, Error) {
 	if other.Is(NullType) {
 		return Null, Success
 	}
-	return nil, CantConvert.Instantiate(ErrorArgs{[]Callstack{}, []any{v.Value.Type().String(), other.Type().String()}}).(Error)
+	return nil, CantConvert.Create(ErrorArgs{[]Callstack{}, []any{v.Value.Type().String(), other.Type().String()}}).(Error)
 }
 
 // #endregion
@@ -62,7 +66,8 @@ func (v ValueBase) Convert(other Type) (Value, Error) {
 // #region Type Base
 type Type interface {
 	Value
-	Instantiate(arg any) Value
+	Instantiate(arg any) (Value, Error)
+	Create(arg any) Value
 	ConvertibleWith(Type) bool
 }
 
@@ -70,8 +75,15 @@ type TypeBase struct {
 	ValueBase
 }
 
-func (t TypeBase) Instantiate(arg any) Value {
-	return Null
+func (t TypeBase) Instantiate(arg any) (Value, Error) {
+	return Null, Success
+}
+func (t TypeBase) Create(arg any) Value {
+	ret, _ := t.Value.(Type).Instantiate(arg)
+	return ret
+}
+func (t TypeBase) Type() Type {
+	return t.Value.(Type)
 }
 func (t TypeBase) Is(other Value) bool {
 	switch other.(type) {
@@ -103,11 +115,11 @@ func (et ErrorType) ConvertibleWith(other Type) bool {
 	return et.Is(other)
 }
 
-func (et ErrorType) Instantiate(arg any) Value {
+func (et ErrorType) Instantiate(arg any) (Value, Error) {
 	args := arg.(ErrorArgs)
 	var ret = Error{tp: et, ErrorArgs: args, Message: et.MessageCallback(args.Args...)}
-	ret.Value = ret
-	return ret
+	ret.Init(&ret)
+	return ret, ret
 }
 func (et ErrorType) Is(other Value) bool {
 	switch other := other.(type) {
@@ -121,11 +133,10 @@ func (et ErrorType) Is(other Value) bool {
 func (et ErrorType) String() string {
 	return "Error:" + et.Tp
 }
-func (et ErrorType) Type() Type {
-	return et
-}
 func NewErrorType(tp string, message_callback func(...any) string) ErrorType {
-	return ErrorType{Tp: tp, MessageCallback: message_callback}
+	ret := ErrorType{Tp: tp, MessageCallback: message_callback}
+	ret.Init(&ret)
+	return ret
 }
 
 type Error struct {
@@ -186,7 +197,7 @@ func (t int8Type) Is(other Value) bool {
 func (t int8Type) Type() Type {
 	return t
 }
-func (t int8Type) Instantiate(arg any) Value {
+func (t int8Type) Instantiate(arg any) (Value, Error) {
 	var val int8 = 0
 	switch arg := arg.(type) {
 	case int:
@@ -209,12 +220,21 @@ func (t int8Type) Instantiate(arg any) Value {
 		val = int8(arg)
 	case uint64:
 		val = int8(arg)
+	case float32:
+		val = int8(arg)
+	case float64:
+		val = int8(arg)
 	case string:
 		valb, _ := strconv.ParseInt(arg, 0, 8)
 		val = int8(valb)
 	}
 	var ret = Int8Value{Number: val, ValueBase: ValueBase{Value: nil}}
-	ret.Value = &ret
+	ret.Init(&ret)
+	return ret, Success
+}
+func newint8Type() Type {
+	ret := int8Type{}
+	ret.Init(&ret)
 	return ret
 }
 
@@ -243,44 +263,44 @@ func (iv Int8Value) Is(other Value) bool {
 func (iv Int8Value) Sum(other Value) (Value, Error) {
 	switch other := other.(type) {
 	case Int8Value:
-		return Int8.Instantiate(iv.Number + other.Number), Success
+		return Int8.Instantiate(iv.Number + other.Number)
 	case *Int8Value:
-		return Int8.Instantiate(iv.Number + other.Number), Success
+		return Int8.Instantiate(iv.Number + other.Number)
 	}
-	return nil, ImpossibleOperation.Instantiate(ErrorArgs{[]Callstack{}, []any{"Sum", iv.Value.Type().String(), other.Type().String()}}).(Error)
+	return nil, ImpossibleOperation.Create(ErrorArgs{[]Callstack{}, []any{"Sum", iv.Value.Type().String(), other.Type().String()}}).(Error)
 }
 func (iv Int8Value) Sub(other Value) (Value, Error) {
 	switch other := other.(type) {
 	case Int8Value:
-		return Int8.Instantiate(iv.Number - other.Number), Success
+		return Int8.Instantiate(iv.Number - other.Number)
 	case *Int8Value:
-		return Int8.Instantiate(iv.Number - other.Number), Success
+		return Int8.Instantiate(iv.Number - other.Number)
 	}
-	return nil, ImpossibleOperation.Instantiate(ErrorArgs{[]Callstack{}, []any{"Sub", iv.Value.Type().String(), other.Type().String()}}).(Error)
+	return nil, ImpossibleOperation.Create(ErrorArgs{[]Callstack{}, []any{"Sub", iv.Value.Type().String(), other.Type().String()}}).(Error)
 }
 func (iv Int8Value) Mult(other Value) (Value, Error) {
 	switch other := other.(type) {
 	case Int8Value:
-		return Int8.Instantiate(iv.Number * other.Number), Success
+		return Int8.Instantiate(iv.Number * other.Number)
 	case *Int8Value:
-		return Int8.Instantiate(iv.Number * other.Number), Success
+		return Int8.Instantiate(iv.Number * other.Number)
 	}
-	return nil, ImpossibleOperation.Instantiate(ErrorArgs{[]Callstack{}, []any{"Mult", iv.Value.Type().String(), other.Type().String()}}).(Error)
+	return nil, ImpossibleOperation.Create(ErrorArgs{[]Callstack{}, []any{"Mult", iv.Value.Type().String(), other.Type().String()}}).(Error)
 }
 func (iv Int8Value) Div(other Value) (Value, Error) {
 	switch other := other.(type) {
 	case Int8Value:
-		return Int8.Instantiate(iv.Number / other.Number), Success
+		return Int8.Instantiate(iv.Number / other.Number)
 	case *Int8Value:
-		return Int8.Instantiate(iv.Number / other.Number), Success
+		return Int8.Instantiate(iv.Number / other.Number)
 	}
-	return nil, ImpossibleOperation.Instantiate(ErrorArgs{[]Callstack{}, []any{"Div", iv.Value.Type().String(), other.Type().String()}}).(Error)
+	return nil, ImpossibleOperation.Create(ErrorArgs{[]Callstack{}, []any{"Div", iv.Value.Type().String(), other.Type().String()}}).(Error)
 }
 func (iv Int8Value) Convert(other Type) (Value, Error) {
 	if other.Type().ConvertibleWith(iv.Type()) {
-		return other.Instantiate(iv.Number), Success
+		return other.Instantiate(iv.Number)
 	}
-	return nil, CantConvert.Instantiate(ErrorArgs{[]Callstack{}, []any{iv.Value.Type().String(), other.Type().String()}}).(Error)
+	return nil, CantConvert.Create(ErrorArgs{[]Callstack{}, []any{iv.Value.Type().String(), other.Type().String()}}).(Error)
 }
 
 // #endregion
@@ -306,10 +326,10 @@ func (st StringType) String() string {
 func (st StringType) Type() Type {
 	return st
 }
-func (st StringType) Instantiate(arg any) Value {
+func (st StringType) Instantiate(arg any) (Value, Error) {
 	ret := StringValue{tp: st, value: fmt.Sprint(arg), ValueBase: ValueBase{Value: nil}}
-	ret.Value = &ret
-	return ret
+	ret.Init(&ret)
+	return ret, Success
 }
 func (st StringType) ConvertibleWith(other Type) bool {
 	switch other := other.(type) {
@@ -322,7 +342,7 @@ func (st StringType) ConvertibleWith(other Type) bool {
 }
 func NewStringType(limit uint32) Type {
 	ret := StringType{Limit: limit, TypeBase: TypeBase{ValueBase: ValueBase{Value: nil}}}
-	ret.Value = &ret
+	ret.Init(&ret)
 	return ret
 }
 
@@ -355,9 +375,9 @@ func (s StringValue) Sum(other Value) (Value, Error) {
 		if s.tp.Limit != 0 && s.tp.Limit < uint32(len(ret)) {
 			break
 		}
-		return nil, StringOutOfLimits.Instantiate(ErrorArgs{[]Callstack{}, []any{s.tp.String(), s.tp.Limit}}).(Error)
+		return nil, StringOutOfLimits.Create(ErrorArgs{[]Callstack{}, []any{s.tp.String(), s.tp.Limit}}).(Error)
 	}
-	return nil, ImpossibleOperation.Instantiate(ErrorArgs{[]Callstack{}, []any{"Sum", s.tp.String(), other.Type().String()}}).(Error)
+	return nil, ImpossibleOperation.Create(ErrorArgs{[]Callstack{}, []any{"Sum", s.tp.String(), other.Type().String()}}).(Error)
 }
 
 // #endregion
@@ -366,31 +386,38 @@ func (s StringValue) Sum(other Value) (Value, Error) {
 
 var (
 	NullType Type = TypeBase{ValueBase{}}
-	Int8     Type = int8Type{}
-	String   Type = NewStringType(0)
+	Int8     Type = newint8Type()
+	Int           = Int8
 
-	SuccessType Type = NewErrorType("Success", func(a ...any) string {
+	Float       = Int8
+	String Type = NewStringType(0)
+)
+var (
+	SuccessType ErrorType = NewErrorType("Success", func(a ...any) string {
 		return "Success To Realise This Operation"
 	})
-	Unclosed Type = NewErrorType("Unclosed", func(a ...any) string {
+	ScopeError ErrorType = NewErrorType("Scope Error", func(a ...any) string {
+		return fmt.Sprintf("The Item %s Dont Exist In Actual Scope", a[0])
+	})
+	Unclosed ErrorType = NewErrorType("Unclosed", func(a ...any) string {
 		return fmt.Sprintf("\"%v\" was not closed", a[0])
 	})
-	InvalidNewLine Type = NewErrorType("Invalid New Line", func(a ...any) string {
+	InvalidNewLine ErrorType = NewErrorType("Invalid New Line", func(a ...any) string {
 		return "You Can T Use NewLine On This Moment"
 	})
-	CantConvert Type = NewErrorType("Can'T Convert", func(a ...any) string {
+	CantConvert ErrorType = NewErrorType("Can'T Convert", func(a ...any) string {
 		return fmt.Sprintf("Can t Convert %s to %s", a[0].(string), a[1].(string))
 	})
-	InvalidChar Type = NewErrorType("Invalid Char", func(a ...any) string {
+	InvalidChar ErrorType = NewErrorType("Invalid Char", func(a ...any) string {
 		return fmt.Sprintf("The Char \"%v\" is Invalid", a[0])
 	})
-	ImpossibleOperation Type = NewErrorType("Impossible Operation", func(a ...any) string {
+	ImpossibleOperation ErrorType = NewErrorType("Impossible Operation", func(a ...any) string {
 		return fmt.Sprintf("Can t %s %s with %s", a[0].(string), a[1].(string), a[2].(string))
 	})
-	StringOutOfLimits Type = NewErrorType("String Out Of Limits", func(a ...any) string {
+	StringOutOfLimits ErrorType = NewErrorType("String Out Of Limits", func(a ...any) string {
 		return fmt.Sprintf("The String %s can t ultrapass %v", a[0].(string), a[1].(uint32))
 	})
-	InvalidPosition Type = NewErrorType("Invalid Position", func(a ...any) string {
+	InvalidPosition ErrorType = NewErrorType("Invalid Position", func(a ...any) string {
 		return "You Can T This Char On This Position"
 	})
 )
@@ -398,7 +425,7 @@ var (
 	Null Value = ValueBase{Value: &ValueBase{}}
 )
 var (
-	Success Error = SuccessType.Instantiate(ErrorArgs{}).(Error)
+	Success Error = SuccessType.Create(ErrorArgs{}).(Error)
 )
 
 // #endregion

@@ -72,9 +72,9 @@ func (l *Lexer) GetString(closer rune) Error {
 	for running {
 		switch l.Ch {
 		case 0:
-			return Unclosed.Instantiate(ErrorArgs{Args: []any{string(closer)}, Callstack: []Callstack{callstack}}).(Error)
+			return Unclosed.Create(ErrorArgs{Args: []any{string(closer)}, Callstack: []Callstack{callstack}}).(Error)
 		case '\n':
-			return InvalidNewLine.Instantiate(ErrorArgs{Args: []any{}, Callstack: []Callstack{callstack}}).(Error)
+			return InvalidNewLine.Create(ErrorArgs{Args: []any{}, Callstack: []Callstack{callstack}}).(Error)
 		case closer:
 			running = false
 		default:
@@ -82,7 +82,7 @@ func (l *Lexer) GetString(closer rune) Error {
 			l.NextToken()
 		}
 	}
-	l.Tokens = append(l.Tokens, NewToken(TT_STRING, String.Instantiate(value), callstack))
+	l.Tokens = append(l.Tokens, NewToken(TT_STRING, String.Create(value), callstack))
 	return Success
 }
 
@@ -136,7 +136,7 @@ func (l *Lexer) Main() Error {
 				content += string(l.Ch)
 				l.NextToken()
 			}
-			l.Tokens = append(l.Tokens, NewToken(TT_NAME, String.Instantiate(content), callstack))
+			l.Tokens = append(l.Tokens, NewToken(TT_NAME, String.Create(content), callstack))
 			continue
 		} else if strings.ContainsRune(NUMBERS+".", l.Ch) {
 			float := false
@@ -156,13 +156,13 @@ func (l *Lexer) Main() Error {
 			if content == "." {
 				l.Tokens = append(l.Tokens, NewToken(TT_POINT, nil, callstack))
 			} else if float {
-				l.Tokens = append(l.Tokens, NewToken(TT_FLOAT, String.Instantiate(content), callstack))
+				l.Tokens = append(l.Tokens, NewToken(TT_FLOAT, String.Create(content), callstack))
 			} else {
-				l.Tokens = append(l.Tokens, NewToken(TT_INT, String.Instantiate(content), callstack))
+				l.Tokens = append(l.Tokens, NewToken(TT_INT, String.Create(content), callstack))
 			}
 			continue
 		} else if ok {
-			return InvalidChar.Instantiate(ErrorArgs{Args: []any{l.Ch}, Callstack: []Callstack{}}).(Error)
+			return InvalidChar.Create(ErrorArgs{Args: []any{l.Ch}, Callstack: []Callstack{}}).(Error)
 		}
 		l.NextToken()
 	}

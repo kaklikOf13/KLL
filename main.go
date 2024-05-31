@@ -9,28 +9,28 @@ import (
 
 func PrintHelp(command string) {
 	switch command {
+	case "eval":
+		fmt.Println(`eval
+    - Use this command to interpret and show result of lastline operation
+    -a | --all-lines - Use This To Show result of all lines operation`)
 	case "interpret":
-		fmt.Println(`
-interpret
+		fmt.Println(`interpret
 	- This Command Is Used For Interpret Code. you can use better errors manipulations`)
 	case "version":
-		fmt.Println(`
-version
+		fmt.Println(`version
 	- Use this to show current version of kll`)
 	case "tokenizer":
-		fmt.Println(`
-tokenizer
+		fmt.Println(`tokenizer
 	- Use this To show tokens of a file
 	- Tokens Is the words
 	- Like myword`)
 	default:
-		fmt.Println(`
-Commands:
-	- interpret <mainFile> // Use this command to interpret a code.
+		fmt.Println(`Commands:
+	- interpret <script> // Use this command to interpret a code.
+	- eval <script>  // Use this command to eval
 	- tokenizer <script>  // Use this To show tokens of a file
 	- help <command> // Use this command to show more of other commands
 	- version // Use this to show current version of kll`)
-		fmt.Println()
 	}
 
 }
@@ -41,6 +41,47 @@ func main() {
 		case "help":
 			if len(os.Args) > 2 {
 				PrintHelp(os.Args[2])
+			} else {
+				PrintHelp("")
+			}
+		case "interpret":
+			if len(os.Args) > 2 {
+				inter := kll.NewInterpreter(kll.NewScope())
+				f, err := os.ReadFile(os.Args[2])
+				if err != nil {
+					fmt.Println(err)
+				}
+				inter.Panic(inter.Exec(string(f)))
+			} else {
+				PrintHelp("")
+			}
+		case "eval":
+			if len(os.Args) > 2 {
+				all_lines := false
+				file := ""
+				for i := 2; i < len(os.Args); i++ {
+					switch os.Args[i] {
+					case "--all-lines", "-a":
+						all_lines = true
+					default:
+						file = os.Args[i]
+					}
+				}
+				inter := kll.NewInterpreter(kll.NewScope())
+				f, err := os.ReadFile(file)
+				if err != nil {
+					fmt.Println(err)
+				}
+				res, errl := inter.Eval(string(f), all_lines)
+				inter.Panic(errl)
+				if all_lines {
+					for i, v := range res {
+						fmt.Printf("Line %v: %s\n", i+1, v)
+					}
+				} else {
+					fmt.Println(res[0])
+				}
+
 			} else {
 				PrintHelp("")
 			}

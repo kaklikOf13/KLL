@@ -1,5 +1,5 @@
-console.log(1 + 20)
-console.log(20 - 6)
-console.log(7-9)
-console.log(12*3)
-console.log(11/3)
+1 + 20
+20 - 6
+7-9
+12*3
+11/ 3
