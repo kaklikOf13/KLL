@@ -96,6 +96,8 @@ func simpleREG(reg AMD64_REG) AMD64_REG {
 		return REG_CL
 	case REG_DL:
 		return REG_DL
+	case REG_SI:
+		return REG_RSI
 
 	case REG_8B:
 		return REG_8B
@@ -192,24 +194,24 @@ func (asm *X86_64_ASSEMBLER) MOV_VALUE(reg AMD64_REG, val []byte, bytes uint8) {
 		}
 	case 4: //32 Bits
 		switch reg {
-		case REG_EAX:
+		case REG_AL:
 			asm.Stream.WriteUInt8(0xb8)
-		case REG_EBX:
+		case REG_BL:
 			asm.Stream.WriteUInt8(0xbb)
-		case REG_ECX:
+		case REG_CL:
 			asm.Stream.WriteUInt8(0xb9)
-		case REG_EDX:
+		case REG_DL:
 			asm.Stream.WriteUInt8(0xba)
 		}
 	case 8: //64 Bits
 		switch reg {
-		case REG_RAX:
+		case REG_AL:
 			asm.Stream.Write([]byte{0x48, 0xb8})
-		case REG_RBX:
+		case REG_BL:
 			asm.Stream.Write([]byte{0x48, 0xbb})
-		case REG_RCX:
+		case REG_CL:
 			asm.Stream.Write([]byte{0x48, 0xb9})
-		case REG_RDX:
+		case REG_DL:
 			asm.Stream.Write([]byte{0x48, 0xba})
 
 		case REG_RDI:
@@ -294,5 +296,5 @@ func (asm *X86_64_ASSEMBLER) String() string {
 }
 
 func NewX86_64() *X86_64_ASSEMBLER {
-	return &X86_64_ASSEMBLER{}
+	return &X86_64_ASSEMBLER{Stream: kll.NewStream(100)}
 }
