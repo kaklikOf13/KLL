@@ -1,8 +1,6 @@
 package kll
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"path"
@@ -86,54 +84,4 @@ func GetJIT[JITFunc any](bytecode []byte) (JITFunc, error) {
 	copy(mem, bytecode)
 	*(*uintptr)(unsafe.Pointer(&ret)) = (uintptr)(unsafe.Pointer(&mem))
 	return ret, nil
-}
-
-// IntToBytes converts an int to a byte slice.
-func Int64ToBytes(n int64) []byte {
-	buf := new(bytes.Buffer)
-	err := binary.Write(buf, binary.LittleEndian, int64(n))
-	if err != nil {
-		panic(err)
-	}
-	return buf.Bytes()
-}
-
-// Int32ToBytes converts an int32 to a byte slice.
-func Int32ToBytes(n int32) []byte {
-	buf := new(bytes.Buffer)
-	err := binary.Write(buf, binary.LittleEndian, n)
-	if err != nil {
-		panic(err)
-	}
-	return buf.Bytes()
-}
-
-// Int16ToBytes converts an int16 to a byte slice.
-func Int16ToBytes(n int16) []byte {
-	buf := new(bytes.Buffer)
-	err := binary.Write(buf, binary.LittleEndian, n)
-	if err != nil {
-		panic(err)
-	}
-	return buf.Bytes()
-}
-
-// Float32ToBytes converts a float32 to a byte slice.
-func Float32ToBytes(f float32) []byte {
-	buf := new(bytes.Buffer)
-	err := binary.Write(buf, binary.LittleEndian, f)
-	if err != nil {
-		panic(err)
-	}
-	return buf.Bytes()
-}
-
-// Float64ToBytes converts a float64 to a byte slice.
-func Float64ToBytes(f float64) []byte {
-	buf := new(bytes.Buffer)
-	err := binary.Write(buf, binary.LittleEndian, f)
-	if err != nil {
-		panic(err)
-	}
-	return buf.Bytes()
 }

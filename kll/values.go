@@ -19,6 +19,7 @@ type Value interface {
 	Div(Value) (Value, Error)
 
 	Convert(Type) (Value, Error)
+	Bytes(*Stream) uint64
 }
 
 type ValueBase struct {
@@ -60,6 +61,14 @@ func (v ValueBase) Convert(other Type) (Value, Error) {
 	}
 	return nil, CantConvert.Create(ErrorArgs{[]Callstack{}, []any{v.Value.Type().String(), other.Type().String()}}).(Error)
 }
+func (v ValueBase) Bytes(stream *Stream) uint64 {
+	stream.WriteInt8(0)
+	return 1
+}
+func (v ValueBase) Size(stream *Stream) uint64 {
+	stream.WriteInt8(0)
+	return 1
+}
 
 // #endregion
 
@@ -68,6 +77,7 @@ type Type interface {
 	Value
 	Instantiate(arg any) (Value, Error)
 	Create(arg any) Value
+	FromBytes(stream *Stream) (Value, Error)
 	ConvertibleWith(Type) bool
 }
 
@@ -94,6 +104,9 @@ func (t TypeBase) Is(other Value) bool {
 }
 func (t TypeBase) ConvertibleWith(tp Type) bool {
 	return t.Is(tp)
+}
+func (t TypeBase) FromBytes(stream *Stream) (Value, Error) {
+	return Null, Success
 }
 
 //#endregion
@@ -133,6 +146,7 @@ func (et ErrorType) Is(other Value) bool {
 func (et ErrorType) String() string {
 	return "Error:" + et.Tp
 }
+
 func NewErrorType(tp string, message_callback func(...any) string) ErrorType {
 	ret := ErrorType{Tp: tp, MessageCallback: message_callback}
 	ret.Init(&ret)
@@ -232,6 +246,11 @@ func (t int8Type) Instantiate(arg any) (Value, Error) {
 	ret.Init(&ret)
 	return ret, Success
 }
+
+func (it int8Type) FromBytes(stream *Stream) (Value, Error) {
+	return it.Instantiate(stream.ReadInt8())
+}
+
 func newint8Type() Type {
 	ret := int8Type{}
 	ret.Init(&ret)
@@ -301,6 +320,10 @@ func (iv Int8Value) Convert(other Type) (Value, Error) {
 		return other.Instantiate(iv.Number)
 	}
 	return nil, CantConvert.Create(ErrorArgs{[]Callstack{}, []any{iv.Value.Type().String(), other.Type().String()}}).(Error)
+}
+func (iv Int8Value) Bytes(stream *Stream) uint64 {
+	stream.WriteInt8(iv.Number)
+	return 1
 }
 
 // #endregion

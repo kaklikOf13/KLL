@@ -1,7 +1,7 @@
-package kll
+package kll_assemblers
 
 import (
-	"encoding/hex"
+	"github.com/kaklikOf13/KLL/kll"
 )
 
 type AMD64_REG = byte
@@ -83,7 +83,7 @@ const (
 )
 
 type X86_64_ASSEMBLER struct {
-	Code []byte
+	Stream *kll.Stream
 }
 
 func simpleREG(reg AMD64_REG) AMD64_REG {
@@ -156,68 +156,99 @@ func simpleREG(reg AMD64_REG) AMD64_REG {
 	return 0
 }
 
-func (asm *X86_64_ASSEMBLER) MOV_VALUE(reg AMD64_REG, val []byte) {
-	switch reg {
-	case REG_AL:
-		asm.Code = append(asm.Code, 0xB0)
-	case REG_BL:
-		asm.Code = append(asm.Code, 0xB3)
-	case REG_CL:
-		asm.Code = append(asm.Code, 0xB1)
-	case REG_DL:
-		asm.Code = append(asm.Code, 0xB2)
-
-	case REG_8B:
-		asm.Code = append(asm.Code, 0x41, 0xb0)
-	case REG_9B:
-		asm.Code = append(asm.Code, 0x41, 0xb1)
-	case REG_10B:
-		asm.Code = append(asm.Code, 0x41, 0xb2)
-	case REG_11B:
-		asm.Code = append(asm.Code, 0x41, 0xb3)
-	case REG_12B:
-		asm.Code = append(asm.Code, 0x41, 0xb4)
-	case REG_13B:
-		asm.Code = append(asm.Code, 0x41, 0xb5)
-	case REG_14B:
-		asm.Code = append(asm.Code, 0x41, 0xb6)
-	case REG_15B:
-		asm.Code = append(asm.Code, 0x41, 0xb7)
-
-	case REG_EAX:
-		asm.Code = append(asm.Code, 0xb8)
-	case REG_EBX:
-		asm.Code = append(asm.Code, 0xbb)
-	case REG_ECX:
-		asm.Code = append(asm.Code, 0xb9)
-	case REG_EDX:
-		asm.Code = append(asm.Code, 0xba)
-
-	case REG_RAX:
-		asm.Code = append(asm.Code, 0x48, 0xb8)
-	case REG_RBX:
-		asm.Code = append(asm.Code, 0x48, 0xbb)
-	case REG_RCX:
-		asm.Code = append(asm.Code, 0x48, 0xb9)
-	case REG_RDX:
-		asm.Code = append(asm.Code, 0x48, 0xba)
-
-	case REG_RDI:
-		asm.Code = append(asm.Code, 0xbf)
-	case REG_RSI:
-		asm.Code = append(asm.Code, 0xbe)
+func (asm *X86_64_ASSEMBLER) MOV_VALUE(reg AMD64_REG, val []byte, bytes uint8) {
+	if len(val) != 0 {
+		bytes = uint8(len(val))
 	}
-	asm.Code = append(asm.Code, val...)
+	reg = simpleREG(reg)
+	switch bytes {
+	case 1: //8 Bits
+		switch reg {
+		case REG_AL:
+			asm.Stream.WriteUInt8(0xB0)
+		case REG_BL:
+			asm.Stream.WriteUInt8(0xB3)
+		case REG_CL:
+			asm.Stream.WriteUInt8(0xB1)
+		case REG_DL:
+			asm.Stream.WriteUInt8(0xB2)
+
+		case REG_8B:
+			asm.Stream.Write([]byte{0x41, 0xb0})
+		case REG_9B:
+			asm.Stream.Write([]byte{0x41, 0xb1})
+		case REG_10B:
+			asm.Stream.Write([]byte{0x41, 0xb2})
+		case REG_11B:
+			asm.Stream.Write([]byte{0x41, 0xb3})
+		case REG_12B:
+			asm.Stream.Write([]byte{0x41, 0xb4})
+		case REG_13B:
+			asm.Stream.Write([]byte{0x41, 0xb5})
+		case REG_14B:
+			asm.Stream.Write([]byte{0x41, 0xb6})
+		case REG_15B:
+			asm.Stream.Write([]byte{0x41, 0xb7})
+		}
+	case 4: //32 Bits
+		switch reg {
+		case REG_EAX:
+			asm.Stream.WriteUInt8(0xb8)
+		case REG_EBX:
+			asm.Stream.WriteUInt8(0xbb)
+		case REG_ECX:
+			asm.Stream.WriteUInt8(0xb9)
+		case REG_EDX:
+			asm.Stream.WriteUInt8(0xba)
+		}
+	case 8: //64 Bits
+		switch reg {
+		case REG_RAX:
+			asm.Stream.Write([]byte{0x48, 0xb8})
+		case REG_RBX:
+			asm.Stream.Write([]byte{0x48, 0xbb})
+		case REG_RCX:
+			asm.Stream.Write([]byte{0x48, 0xb9})
+		case REG_RDX:
+			asm.Stream.Write([]byte{0x48, 0xba})
+
+		case REG_RDI:
+			asm.Stream.WriteUInt8(0xbf)
+		case REG_RSI:
+			asm.Stream.WriteUInt8(0xbe)
+		}
+	}
+	asm.Stream.Write(val)
 }
 
 func (asm *X86_64_ASSEMBLER) SYSCALL() {
-	asm.Code = append(asm.Code, 0x0f, 0x05)
+	asm.Stream.Write([]byte{0x0f, 0x05})
 }
-func (asm *X86_64_ASSEMBLER) INSERT(val []byte) {
-	asm.Code = append(asm.Code, val...)
+func (asm *X86_64_ASSEMBLER) ADD(val []byte, bytes uint8) {
+	if len(val) != 0 {
+		bytes = uint8(len(val))
+	}
+	switch bytes {
+	case 1:
+		asm.Stream.WriteUInt8(0x04)
+	}
+	asm.Stream.Write(val)
+}
+func (asm *X86_64_ASSEMBLER) ADDR(val AMD64_REG, bytes uint8) {
+	val = simpleREG(val)
+	asm.Stream.WriteUInt8(0x00)
+	switch bytes {
+	case 1:
+		switch val {
+		case REG_AL:
+			asm.Stream.WriteUInt8(0xc0)
+		default:
+			asm.Stream.WriteUInt8(0xD8)
+		}
+	}
 }
 
-func getRegCCode(to AMD64_REG, reg AMD64_REG) byte {
+func getRegCCode(to AMD64_REG, reg AMD64_REG) uint8 {
 	switch to {
 	case REG_AL:
 		switch reg {
@@ -242,32 +273,24 @@ func getRegCCode(to AMD64_REG, reg AMD64_REG) byte {
 func (asm *X86_64_ASSEMBLER) MOV_REG(to AMD64_REG, reg AMD64_REG) {
 	if reg <= LAST_INT8 && to <= LAST_INT8 {
 		// If both source and destination registers are 8-bit, use a different opcode
-		asm.Code = append(asm.Code, 0x88)
+		asm.Stream.WriteUInt8(0x88)
 	} else {
 		// Otherwise, use the default 64-bit mov opcode
-		asm.Code = append(asm.Code, 0x48, 0x89)
+		asm.Stream.Write([]byte{0x48, 0x89})
 	}
 	reg = simpleREG(reg)
 	to = simpleREG(to)
 
-	asm.Code = append(asm.Code, getRegCCode(to, reg))
+	asm.Stream.WriteUInt8(getRegCCode(to, reg))
 }
 func (asm *X86_64_ASSEMBLER) RET() {
-	asm.Code = append(asm.Code, 0xC3)
-
+	asm.Stream.WriteUInt8(0xC3)
 }
 func (asm *X86_64_ASSEMBLER) BREAK() {
-	asm.Code = append(asm.Code, 0xCD, 0x03)
+	asm.Stream.Write([]byte{0xCD, 0x03})
 }
 func (asm *X86_64_ASSEMBLER) String() string {
-	ret := ""
-	for i, v := range asm.Code {
-		if i > 0 {
-			ret += " "
-		}
-		ret += hex.EncodeToString([]byte{v})
-	}
-	return ret
+	return asm.Stream.String()
 }
 
 func NewX86_64() *X86_64_ASSEMBLER {
