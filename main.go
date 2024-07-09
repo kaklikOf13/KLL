@@ -8,6 +8,12 @@ import (
 	"github.com/kaklikOf13/KLL/kll"
 )
 
+func IfThenElse(condition bool, a interface{}, b interface{}) interface{} {
+	if condition {
+		return a
+	}
+	return b
+}
 func PrintHelp(command string) {
 	switch command {
 	case "eval":
@@ -102,13 +108,18 @@ func main() {
 					fmt.Println(kllerr)
 				}
 				line := 1
-				show := fmt.Sprintf("Line %v:", line)
-				for _, tok := range toks {
-					switch tok.Type {
-					case kll.TT_NEWLINE:
+				maxSize := 1
+				for _, toks := range toks {
+					if len(toks.Callstack.Show) > maxSize {
+						maxSize = len(toks.Callstack.Show)
+					}
+				}
+				show := ""
+				for i, tok := range toks {
+					if tok.Type == kll.TT_NEWLINE || i == 0 {
 						line++
-						show += "\n" + fmt.Sprintf("Line %v:", line)
-					default:
+						show += IfThenElse(i == 0, "", "\n").(string) + fmt.Sprintf("Line %v: \"%s%s\" =", line, tok.Callstack.Show, strings.Repeat(" ", maxSize-len(tok.Callstack.Show)))
+					} else {
 						show += " " + tok.String()
 					}
 				}
