@@ -97,7 +97,48 @@ func TestX86_64Compiler3(t *testing.T) {
 	}
 	ret := f()
 	fmt.Println(ret)
-	if ret != 20 {
+	if ret != 23 {
+		t.Fail()
+	}
+}
+
+func TestX86_64Compiler4(t *testing.T) {
+	comp := kll_compiler.NewX86_64_Compiler(kll.NewInterpreter(kll.NewScope()))
+	nodes, errk := kll.Parse("10+5+5+3")
+	if errk.Is(kll.Success) {
+		comp.Inter.Panic(errk)
+	}
+	comp.Compile_Node(nodes[0], kll_arch.REG_AL, kll.Int8, []kll.Callstack{}, comp.Inter.Scope, false)
+	comp.Assembler.RET()
+	fmt.Println("code:", comp.Assembler)
+
+	f, err := kll.GetJIT[func() int8](comp.Assembler.Stream.Value)
+	if err != nil {
+		panic(err)
+	}
+	ret := f()
+	fmt.Println(ret)
+	if ret != 23 {
+		t.Fail()
+	}
+}
+func TestX86_64Compiler5(t *testing.T) {
+	comp := kll_compiler.NewX86_64_Compiler(kll.NewInterpreter(kll.NewScope()))
+	nodes, errk := kll.Parse("10+5+5-3")
+	if errk.Is(kll.Success) {
+		comp.Inter.Panic(errk)
+	}
+	comp.Compile_Node(nodes[0], kll_arch.REG_AL, kll.Int8, []kll.Callstack{}, comp.Inter.Scope, false)
+	comp.Assembler.RET()
+	fmt.Println("code:", comp.Assembler)
+
+	f, err := kll.GetJIT[func() int8](comp.Assembler.Stream.Value)
+	if err != nil {
+		panic(err)
+	}
+	ret := f()
+	fmt.Println(ret)
+	if ret != 17 {
 		t.Fail()
 	}
 }

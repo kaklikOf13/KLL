@@ -46,6 +46,19 @@ func (c *X86_64_Compiler) Compile_Node(node kll.Node, reg kll_arch.AMD64_REG, ex
 		if !err.Is(kll.Success) {
 			return err
 		}
+	case kll.NT_SUB:
+		err := c.Compile_Node(node.NodeValue[0].(kll.Node), kll_arch.REG_AL, expected_type, callstack, scope, unsafe)
+		if !err.Is(kll.Success) {
+			return err
+		}
+		err = c.Compile_Node(node.NodeValue[1].(kll.Node), kll_arch.REG_BL, expected_type, callstack, scope, unsafe)
+		if !err.Is(kll.Success) {
+			return err
+		}
+		c.Assembler.SUBR(kll_arch.REG_BL, 1)
+		if !err.Is(kll.Success) {
+			return err
+		}
 	}
 	return kll.Success
 }

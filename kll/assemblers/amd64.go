@@ -249,7 +249,26 @@ func (asm *X86_64_ASSEMBLER) ADDR(val AMD64_REG, bytes uint8) {
 		}
 	}
 }
-
+func (asm *X86_64_ASSEMBLER) SUB(val []byte, bytes uint8) {
+	if len(val) != 0 {
+		bytes = uint8(len(val))
+	}
+	switch bytes {
+	case 1:
+		asm.Stream.WriteUInt8(0x2c)
+	}
+	asm.Stream.Write(val)
+}
+func (asm *X86_64_ASSEMBLER) SUBR(reg AMD64_REG, bytes uint8) {
+	asm.Stream.WriteUInt8(0x28)
+	switch bytes {
+	case 1:
+		switch simpleREG(reg) {
+		default:
+			asm.Stream.WriteUInt8(0xD8)
+		}
+	}
+}
 func getRegCCode(to AMD64_REG, reg AMD64_REG) uint8 {
 	switch to {
 	case REG_AL:
