@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/kaklikOf13/KLL/kll"
 )
@@ -23,6 +24,11 @@ func PrintHelp(command string) {
 		fmt.Println(`tokenizer
 	- Use this To show tokens of a file
 	- Tokens Is the words
+	- Like myword`)
+	case "parse":
+		fmt.Println(`tokenizer
+	- Use this To show nodes of a file
+	- Tokens Is the string
 	- Like myword`)
 	default:
 		fmt.Println(`Commands:
@@ -105,6 +111,32 @@ func main() {
 					default:
 						show += " " + tok.String()
 					}
+				}
+				fmt.Println(show)
+			} else {
+				fmt.Println("Dont Have A File")
+			}
+		case "parse":
+			if len(os.Args) > 2 {
+				f, err := os.ReadFile(os.Args[2])
+				if err != nil {
+					fmt.Println(err)
+				}
+				nodes, kllerr := kll.Parse(string(f))
+				if !kllerr.Is(kll.Success) {
+					fmt.Println(kllerr)
+				}
+				line := 1
+				show := ""
+				maxSize := 1
+				for _, node := range nodes {
+					if len(node.Callstack.Show) > maxSize {
+						maxSize = len(node.Callstack.Show)
+					}
+				}
+				for _, node := range nodes {
+					show += fmt.Sprintf("Line %v: \"%s%s\" = ", line, node.Callstack.Show, strings.Repeat(" ", maxSize-len(node.Callstack.Show))) + node.String() + "\n"
+					line++
 				}
 				fmt.Println(show)
 			} else {
